@@ -1,42 +1,157 @@
-#Configurações 
-import pygame
 import random
+import tkinter as tk
 
-pygame.init () 
-pygame.displey.ste_caption("Jogo snake Python")
-Largura,altura = 600,400
-pygame.display.set_model ((Largura,altura))
-relogio = pygame.time.Clock()
-#cores 
-preta = (0,0,0)
-azul = (0,0,255)
-laranja = (255,127,0)
-branca = (255,255,255)
+# Cores já definidas
+preta = "#000000"
+azul = "#0000FF"
+laranja = "#FF7F00"
+branca = "#FFFFFF"
 
-#Paramentros 
-tamanho_quadrado = 10
-velociddae = 15
+# Configurações do jogo
+LARGURA = 600
+ALTURA = 400
+TAMANHO_QUADRADO = 20
+VELOCIDADE = 120
 
-def rodar_jogo():
-    fim_jogo = False
+class JogoCobrinha:
+    def __init__(self, raiz):
+        self.raiz = raiz
+        self.raiz.title("Jogo da Cobrinha")
+        self.raiz.configure(bg=preta)
+        self.raiz.resizable(False, False)
 
-    while not fim_jogo:
+        self.canvas = tk.Canvas(
+            self.raiz,
+            width=LARGURA,
+            height=ALTURA,
+            bg=preta,
+            highlightthickness=0
+        )
+        self.canvas.pack()
 
-        for eventos in pygame.eventos.get():
+        self.pontuacao = 0
+        self.texto_pontuacao = tk.Label(
+            self.raiz,
+            text="Pontuação: 0",
+            bg=preta,
+            fg=branca,
+            font=("Arial", 12, "bold")
+        )
+        self.texto_pontuacao.pack()
 
-            if eventos.type == pygame.QUIT:
-                fim_jogo = True
+        self.iniciar_jogo()
+
+    def iniciar_jogo(self):
+        self.direcao = "Direita"
+        self.proxima_direcao = "Direita"
+        self.cobra = [
+            [LARGURA // 2, ALTURA // 2],
+            [LARGURA // 2 - TAMANHO_QUADRADO, ALTURA // 2],
+            [LARGURA // 2 - 2 * TAMANHO_QUADRADO, ALTURA // 2],
+        ]
+        self.comida = self.gerar_comida()
+        self.pontuacao = 0
+        self.texto_pontuacao.config(text="Pontuação: 0")
+        self.atualizar_jogo()
+
+    def gerar_comida(self):
+        while True:
+            x = random.randint(0, (LARGURA // TAMANHO_QUADRADO) - 1) * TAMANHO_QUADRADO
+            y = random.randint(0, (ALTURA // TAMANHO_QUADRADO) - 1) * TAMANHO_QUADRADO
+            pos = [x, y]
+            if pos not in self.cobra:
+                return pos
+
+    def atualizar_jogo(self):
+        self.canvas.delete("all")
+
+        # Desenhar comida
+        self.canvas.create_rectangle(
+            self.comida[0], self.comida[1],
+            self.comida[0] + TAMANHO_QUADRADO, self.comida[1] + TAMANHO_QUADRADO,
+            fill=laranja,
+            outline=preta
+        )
+
+        # Desenhar cobra
+        for parte in self.cobra:
+            self.canvas.create_rectangle(
+                parte[0], parte[1],
+                parte[0] + TAMANHO_QUADRADO, parte[1] + TAMANHO_QUADRADO,
+                fill=azul,
+                outline=branca
+            )
+
+        self.mover_cobra()
+        self.raiz.after(VELOCIDADE, self.atualizar_jogo)
+
+    def mover_cobra(self):
+        self.direcao = self.proxima_direcao
+
+        cabeca = self.cobra[0][:]
+        if self.direcao == "Cima":
+            cabeca[1] -= TAMANHO_QUADRADO
+        elif self.direcao == "Baixo":
+            cabeca[1] += TAMANHO_QUADRADO
+        elif self.direcao == "Esquerda":
+            cabeca[0] -= TAMANHO_QUADRADO
+        elif self.direcao == "Direita":
+            cabeca[0] += TAMANHO_QUADRADO
+
+        self.cobra.insert(0, cabeca)
+
+        if cabeca == self.comida:
+            self.pontuacao += 1
+            self.texto_pontuacao.config(text=f"Pontuação: {self.pontuacao}")
+            self.comida = self.gerar_comida()
+        else:
+            self.cobra.pop()
+
+        if (
+            cabeca[0] < 0
+            or cabeca[1] < 0
+            or cabeca[0] + TAMANHO_QUADRADO > LARGURA
+            or cabeca[1] + TAMANHO_QUADRADO > ALTURA
+            or cabeca in self.cobra[1:]
+        ):
+            self.game_over()
+
+    def game_over(self):
+        self.canvas.create_text(
+            LARGURA // 2,
+            ALTURA // 2,
+            text="Game Over",
+            fill=branca,
+            font=("Arial", 24, "bold")
+        )
+        self.canvas.create_text(
+            LARGURA // 2,
+            ALTURA // 2 + 30,
+            text="Pressione Enter para jogar de novo",
+            fill=branca,
+            font=("Arial", 12)
+        )
+        self.raiz.bind("<Return>", lambda event: self.iniciar_jogo())
+
+    def mudar_direcao(self, nova_direcao):
+        oposto = {
+            "Cima": "Baixo",
+            "Baixo": "Cima",
+            "Esquerda": "Direita",
+            "Direita": "Esquerda"
+        }
+
+        if nova_direcao != oposto.get(self.direcao, ""):
+            self.proxima_direcao = nova_direcao
 
 
-#Loop infinto 
+if __name__ == "__main__":
+    raiz = tk.Tk()
+    jogo = JogoCobrinha(raiz)
 
-# Desnhas objetos 
-#TPontuação
-#Cobrinha
-#Comida
+    raiz.bind("<Up>", lambda event: jogo.mudar_direcao("Cima"))
+    raiz.bind("<Down>", lambda event: jogo.mudar_direcao("Baixo"))
+    raiz.bind("<Left>", lambda event: jogo.mudar_direcao("Esquerda"))
+    raiz.bind("<Right>", lambda event: jogo.mudar_direcao("Direita"))
 
-#Criar a loga de terminar 
-#Cobra bater na parede 
-#Bter na propria 
-
-#Interações do jogo com o Usario 
+    raiz.mainloop()
