@@ -19,6 +19,8 @@ class JogoCobrinha:
         self.raiz.title("Jogo da Cobrinha")
         self.raiz.configure(bg=preta)
         self.raiz.resizable(False, False)
+        self.jogo_ativo = False
+        self.id_after = None
 
         self.canvas = tk.Canvas(
             self.raiz,
@@ -44,14 +46,17 @@ class JogoCobrinha:
     def iniciar_jogo(self):
         self.direcao = "Direita"
         self.proxima_direcao = "Direita"
+
         self.cobra = [
             [LARGURA // 2, ALTURA // 2],
             [LARGURA // 2 - TAMANHO_QUADRADO, ALTURA // 2],
             [LARGURA // 2 - 2 * TAMANHO_QUADRADO, ALTURA // 2],
         ]
+
         self.comida = self.gerar_comida()
         self.pontuacao = 0
         self.texto_pontuacao.config(text="Pontuação: 0")
+
         self.atualizar_jogo()
 
     def gerar_comida(self):
@@ -63,6 +68,9 @@ class JogoCobrinha:
                 return pos
 
     def atualizar_jogo(self):
+        if not self.jogo_ativo:
+            return
+        
         self.canvas.delete("all")
 
         # Desenhar comida
@@ -83,7 +91,12 @@ class JogoCobrinha:
             )
 
         self.mover_cobra()
-        self.raiz.after(VELOCIDADE, self.atualizar_jogo)
+
+        if self.jogo_ativo:
+           self.id_after = self.raiz.after(
+           VELOCIDADE,
+           self.atualizar_jogo
+           )
 
     def mover_cobra(self):
         self.direcao = self.proxima_direcao
@@ -132,6 +145,7 @@ class JogoCobrinha:
             font=("Arial", 12)
         )
         self.raiz.bind("<Return>", lambda event: self.iniciar_jogo())
+       
 
     def mudar_direcao(self, nova_direcao):
         oposto = {
