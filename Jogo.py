@@ -33,17 +33,23 @@ class JogoCobrinha:
 
         self.pontuacao = 0
         self.texto_pontuacao = tk.Label(
-            self.raiz,
-            text="Pontuação: 0",
-            bg=preta,
-            fg=branca,
-            font=("Arial", 12, "bold")
-        )
+        self.raiz,
+          text="0",
+          bg=preta,
+          fg=branca,
+          font=("Arial", 20, "bold")
+)
+        
         self.texto_pontuacao.pack()
 
         self.iniciar_jogo()
 
     def iniciar_jogo(self):
+        if self.id_after is not None:
+            self.raiz.after_cancel(self.id_after)
+            self.id_after = None
+
+        self.jogo_ativo = True
         self.direcao = "Direita"
         self.proxima_direcao = "Direita"
 
@@ -55,7 +61,8 @@ class JogoCobrinha:
 
         self.comida = self.gerar_comida()
         self.pontuacao = 0
-        self.texto_pontuacao.config(text="Pontuação: 0")
+        self.texto_pontuacao.config(text="0")
+        self.canvas.delete("all")
 
         self.atualizar_jogo()
 
@@ -115,7 +122,7 @@ class JogoCobrinha:
 
         if cabeca == self.comida:
             self.pontuacao += 1
-            self.texto_pontuacao.config(text=f"Pontuação: {self.pontuacao}")
+            self.texto_pontuacao.config(text=str(self.pontuacao))
             self.comida = self.gerar_comida()
         else:
             self.cobra.pop()
@@ -130,6 +137,11 @@ class JogoCobrinha:
             self.game_over()
 
     def game_over(self):
+        self.jogo_ativo = False
+        if self.id_after is not None:
+            self.raiz.after_cancel(self.id_after)
+            self.id_after = None
+
         self.canvas.create_text(
             LARGURA // 2,
             ALTURA // 2,
@@ -144,8 +156,6 @@ class JogoCobrinha:
             fill=branca,
             font=("Arial", 12)
         )
-        self.raiz.bind("<Return>", lambda event: self.iniciar_jogo())
-       
 
     def mudar_direcao(self, nova_direcao):
         oposto = {
@@ -167,5 +177,6 @@ if __name__ == "__main__":
     raiz.bind("<Down>", lambda event: jogo.mudar_direcao("Baixo"))
     raiz.bind("<Left>", lambda event: jogo.mudar_direcao("Esquerda"))
     raiz.bind("<Right>", lambda event: jogo.mudar_direcao("Direita"))
+    raiz.bind("<Return>", lambda event: jogo.iniciar_jogo())
 
     raiz.mainloop()
